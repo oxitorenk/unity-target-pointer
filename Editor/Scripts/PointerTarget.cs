@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Oxitorenk.TargetPointer
@@ -7,52 +6,58 @@ namespace Oxitorenk.TargetPointer
     [DefaultExecutionOrder(0)]
     public class PointerTarget : MonoBehaviour
     {
-        [SerializeField] private List<PointerItem> pointers;
+        [Tooltip("List of available pointers for this target")]
+        [SerializeField] private List<PointerItem> pointerItems;
 
         public PointerItem CurrentPointer { get; private set; }
-        
+
         private void OnEnable()
         {
             PointerDrawer.TargetStateChanged?.Invoke(this, true);
         }
-        
+
         private void OnDisable()
         {
             PointerDrawer.TargetStateChanged?.Invoke(this, false);
         }
-        
+
+        /// <summary>
+        /// Attaches a new pointer to the target
+        /// </summary>
+        /// <param name="pointer">Pointer item to attach</param>
         public void AttachPointer(PointerItem pointer)
         {
             if (CurrentPointer == pointer) return;
-            
-            // Hide the current pointer if it's exist
+
             if (CurrentPointer != null)
                 CurrentPointer.gameObject.SetActive(false);
-            
-            // Change current pointer and show it
+
             CurrentPointer = pointer;
-            CurrentPointer.gameObject.SetActive(true);
+            if (CurrentPointer != null)
+                CurrentPointer.gameObject.SetActive(true);
         }
-        
+
+        /// <summary>
+        /// Removes the current pointer from the target
+        /// </summary>
         public void RemovePointer()
         {
             if (CurrentPointer == null) return;
-            
+
             CurrentPointer.gameObject.SetActive(false);
             CurrentPointer = null;
         }
-        
-        public bool HasPointerType(PointerItem.PointerType pointerType, out PointerItem pointer)
-        {
-            var availablePointers = pointers.FindAll(pointer => pointer.Type == pointerType && pointer != null);
-            if (availablePointers.Count == 0)
-            {
-                pointer = null;
-                return false;
-            }
 
-            pointer = availablePointers.First();
-            return true;
+        /// <summary>
+        /// Checks if a pointer of the specified type is available
+        /// </summary>
+        /// <param name="pointerType">Pointer type to check</param>
+        /// <param name="pointer">Pointer item to return if found any</param>
+        /// <returns>True if pointer found, false otherwise</returns>
+        public bool TryGetPointer(PointerItem.PointerType pointerType, out PointerItem pointer)
+        {
+            pointer = pointerItems.Find(item => item.Type == pointerType);
+            return pointer != null;
         }
     }
 }

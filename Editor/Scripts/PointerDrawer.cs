@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Oxitorenk.TargetPointer
 {
-    [DefaultExecutionOrder(-1)]
+    [DefaultExecutionOrder(0)]
     public class PointerDrawer : MonoBehaviour
     {
         public static Action<PointerTarget, bool> TargetStateChanged;
@@ -16,50 +15,53 @@ namespace Oxitorenk.TargetPointer
         private readonly Dictionary<string, List<PointerItem>> _pointers = new();
         
         private Camera _mainCamera;
-        private Vector3 _screenCentre;
+        private Vector3 _screenCenter;
         private Vector3 _screenBounds;
 
         private void Awake()
         {
             _mainCamera = Camera.main;
-            _screenCentre = new Vector3(Screen.width, Screen.height, 0) / 2;
-            _screenBounds = _screenCentre * ScreenBoundOffset;
+            _screenCenter = new Vector3(Screen.width, Screen.height, 0) / 2;
+            _screenBounds = _screenCenter * ScreenBoundOffset;
             
-            TargetStateChanged += HandleTargetStateChanged;
+            TargetStateChanged += OnTargetStateChanged;
         }
         
         private void OnDestroy()
         {
-            TargetStateChanged -= HandleTargetStateChanged;
+            TargetStateChanged -= OnTargetStateChanged;
         }
 
         private void LateUpdate()
         {
-            DrawPointers();
+            UpdatePointers();
         }
 
-        private void DrawPointers()
+        /// <summary>
+        /// Updates the pointers for each target based on visibility
+        /// </summary>
+        private void UpdatePointers()
         {
-            foreach(var target in _targets)
+            foreach (var target in _targets)
             {
                 var screenPosition = PointerHelper.GetScreenPosition(_mainCamera, target.transform.position);
-                var isTargetVisible = PointerHelper.IsTargetVisible(screenPosition);
+                bool isTargetVisible = PointerHelper.IsTargetVisible(screenPosition);
 
-                if(isTargetVisible && target.HasPointerType(PointerItem.PointerType.OnScreen, out var pointerItem))
+                if (isTargetVisible && target.TryGetPointer(PointerItem.PointerType.OnScreen, out var pointerItem))
                 {
                     screenPosition.z = 0;
                     
-                    var pointer = target.CurrentPointer != null ? target.CurrentPointer : GetPointer(pointerItem);
+                    var pointer = target.CurrentPointer ?? GetPointer(pointerItem);
                     pointer.transform.position = screenPosition;
                     
                     target.AttachPointer(pointer);
                 }
-                else if (!isTargetVisible && target.HasPointerType(PointerItem.PointerType.OffScreen, out pointerItem))
+                else if (!isTargetVisible && target.TryGetPointer(PointerItem.PointerType.OffScreen, out pointerItem))
                 {
                     var angle = float.MinValue;
-                    PointerHelper.GetOnScreenPointerPositionAndAngle(ref screenPosition, ref angle, _screenCentre, _screenBounds);
+                    PointerHelper.CalculatePointerPositionAndAngle(ref screenPosition, ref angle, _screenCenter, _screenBounds);
 
-                    var pointer = target.CurrentPointer != null ? target.CurrentPointer : GetPointer(pointerItem);
+                    var pointer = target.CurrentPointer ?? GetPointer(pointerItem);
                     pointer.transform.rotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg);
                     pointer.transform.position = screenPosition;
                     
@@ -68,14 +70,13 @@ namespace Oxitorenk.TargetPointer
                 else
                 {
                     target.RemovePointer();
-                    return;
                 }
             }
         }
         
-        private void HandleTargetStateChanged(PointerTarget target, bool active)
+        private void OnTargetStateChanged(PointerTarget target, bool isActive)
         {
-            if (active)
+            if (isActive)
             {
                 _targets.Add(target);
             }
@@ -86,22 +87,23 @@ namespace Oxitorenk.TargetPointer
             }
         }
         
+        /// <summary>
+        /// Retrieves an existing pointer or creates a new one if none are available
+        /// </summary>
+        /// <param name="pointerItem">Pointer item to check if in pool</param>
+        /// <returns>Pointer item</returns>
         private PointerItem GetPointer(PointerItem pointerItem)
         {
-            if (_pointers.ContainsKey(pointerItem.Key) == false)
-                _pointers.Add(pointerItem.Key, new List<PointerItem>());
+            if (!_pointers.ContainsKey(pointerItem.Key))
+                _pointers[pointerItem.Key] = new List<PointerItem>();
 
-            var isAnyPointerExist = _pointers[pointerItem.Key].Any(item => !item.gameObject.activeSelf);
-            if (isAnyPointerExist)
-            {
-                return _pointers[pointerItem.Key].First(item => !item.gameObject.activeSelf);
-            }
+            var availablePointer = _pointers[pointerItem.Key].Find(item => !item.gameObject.activeSelf);
+            if (availablePointer != null)
+                return availablePointer;
 
-            // Create new pointer
-            var pointer = Instantiate(pointerItem, transform);
-            _pointers[pointerItem.Key].Add(pointer);
-
-            return pointer;
+            var newPointer = Instantiate(pointerItem, transform);
+            _pointers[pointerItem.Key].Add(newPointer);
+            return newPointer;
         }
     }
 }
