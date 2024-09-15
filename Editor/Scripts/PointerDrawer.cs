@@ -13,7 +13,7 @@ namespace Oxitorenk.TargetPointer
         private const float ScreenBoundOffset = 0.9f;
         
         private readonly List<PointerTarget> _targets = new();
-        private readonly Dictionary<string, List<PointerItem>> _indicators = new();
+        private readonly Dictionary<string, List<PointerItem>> _pointers = new();
         
         private Camera _mainCamera;
         private Vector3 _screenCentre;
@@ -35,39 +35,39 @@ namespace Oxitorenk.TargetPointer
 
         private void LateUpdate()
         {
-            DrawIndicators();
+            DrawPointers();
         }
 
-        private void DrawIndicators()
+        private void DrawPointers()
         {
             foreach(var target in _targets)
             {
                 var screenPosition = PointerHelper.GetScreenPosition(_mainCamera, target.transform.position);
                 var isTargetVisible = PointerHelper.IsTargetVisible(screenPosition);
 
-                if(isTargetVisible && target.HasIndicatorType(PointerItem.IndicatorType.OnScreen, out var indicatorItem))
+                if(isTargetVisible && target.HasPointerType(PointerItem.PointerType.OnScreen, out var pointerItem))
                 {
                     screenPosition.z = 0;
                     
-                    var indicator = target.CurrentPointer != null ? target.CurrentPointer : GetIndicator(indicatorItem);
-                    indicator.transform.position = screenPosition;
+                    var pointer = target.CurrentPointer != null ? target.CurrentPointer : GetPointer(pointerItem);
+                    pointer.transform.position = screenPosition;
                     
-                    target.AttachIndicator(indicator);
+                    target.AttachPointer(pointer);
                 }
-                else if (!isTargetVisible && target.HasIndicatorType(PointerItem.IndicatorType.OffScreen, out indicatorItem))
+                else if (!isTargetVisible && target.HasPointerType(PointerItem.PointerType.OffScreen, out pointerItem))
                 {
                     var angle = float.MinValue;
-                    PointerHelper.GetOnScreenIndicatorPositionAndAngle(ref screenPosition, ref angle, _screenCentre, _screenBounds);
+                    PointerHelper.GetOnScreenPointerPositionAndAngle(ref screenPosition, ref angle, _screenCentre, _screenBounds);
 
-                    var indicator = target.CurrentPointer != null ? target.CurrentPointer : GetIndicator(indicatorItem);
-                    indicator.transform.rotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg); // Sets the rotation for the arrow indicator.
-                    indicator.transform.position = screenPosition;
+                    var pointer = target.CurrentPointer != null ? target.CurrentPointer : GetPointer(pointerItem);
+                    pointer.transform.rotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg);
+                    pointer.transform.position = screenPosition;
                     
-                    target.AttachIndicator(indicator);
+                    target.AttachPointer(pointer);
                 }
                 else
                 {
-                    target.RemoveIndicator();
+                    target.RemovePointer();
                     return;
                 }
             }
@@ -81,27 +81,27 @@ namespace Oxitorenk.TargetPointer
             }
             else
             {
-                target.RemoveIndicator();
+                target.RemovePointer();
                 _targets.Remove(target);
             }
         }
         
-        private PointerItem GetIndicator(PointerItem pointerItem)
+        private PointerItem GetPointer(PointerItem pointerItem)
         {
-            if (_indicators.ContainsKey(pointerItem.Key) == false)
-                _indicators.Add(pointerItem.Key, new List<PointerItem>());
+            if (_pointers.ContainsKey(pointerItem.Key) == false)
+                _pointers.Add(pointerItem.Key, new List<PointerItem>());
 
-            var isAnyPointerExist = _indicators[pointerItem.Key].Any(item => !item.gameObject.activeSelf);
+            var isAnyPointerExist = _pointers[pointerItem.Key].Any(item => !item.gameObject.activeSelf);
             if (isAnyPointerExist)
             {
-                return _indicators[pointerItem.Key].First(item => !item.gameObject.activeSelf);
+                return _pointers[pointerItem.Key].First(item => !item.gameObject.activeSelf);
             }
 
             // Create new pointer
-            var indicator = Instantiate(pointerItem, transform);
-            _indicators[pointerItem.Key].Add(indicator);
+            var pointer = Instantiate(pointerItem, transform);
+            _pointers[pointerItem.Key].Add(pointer);
 
-            return indicator;
+            return pointer;
         }
     }
 }
