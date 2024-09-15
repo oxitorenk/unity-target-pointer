@@ -4,65 +4,64 @@ namespace Oxitorenk.TargetPointer
 {
     public static class PointerHelper
     {
-        public static Vector3 GetScreenPosition(Camera mainCamera, Vector3 targetPosition)
+        /// <summary>
+        /// Converts a world position to a screen position based on the given camera
+        /// </summary>
+        /// <param name="camera">Camera to use</param>
+        /// <param name="targetPosition">Target's position</param>
+        /// <returns></returns>
+        public static Vector3 GetScreenPosition(Camera camera, Vector3 targetPosition)
         {
-            var screenPosition = mainCamera.WorldToScreenPoint(targetPosition);
-            return screenPosition;
+            return camera.WorldToScreenPoint(targetPosition);
         }
         
+        // Checks if the target is visible on the screen
         public static bool IsTargetVisible(Vector3 screenPosition)
         {
-            var isTargetVisible = screenPosition.z > 0 && screenPosition.x > 0 && screenPosition.x < Screen.width && screenPosition.y > 0 && screenPosition.y < Screen.height;
-            return isTargetVisible;
+            return screenPosition.z > 0 &&
+                   screenPosition.x >= 0 && screenPosition.x <= Screen.width &&
+                   screenPosition.y >= 0 && screenPosition.y <= Screen.height;
         }
         
-        public static void GetOnScreenPointerPositionAndAngle(ref Vector3 screenPosition, ref float angle, Vector3 screenCentre, Vector3 screenBounds)
+        /// <summary>
+        /// Calculates the pointer's screen position and angle for off-screen targets
+        /// </summary>
+        /// <param name="screenPosition"></param>
+        /// <param name="angle"></param>
+        /// <param name="screenCenter"></param>
+        /// <param name="screenBounds"></param>
+        public static void CalculatePointerPositionAndAngle(ref Vector3 screenPosition, ref float angle, Vector3 screenCenter, Vector3 screenBounds)
         {
-            // Our screenPosition's origin is screen's bottom-left corner.
-            // But we have to get the arrow's screenPosition and rotation with respect to screenCentre.
-            screenPosition -= screenCentre;
+            screenPosition -= screenCenter;
 
-            // When the targets are behind the camera their projections on the screen (WorldToScreenPoint) are inverted, invert them.
-            if(screenPosition.z < 0)
+            // Flip screenPosition if the target is behind the camera
+            if (screenPosition.z < 0)
                 screenPosition *= -1;
 
-            // Angle between the x-axis (bottom of screen) and a vector starting at zero(bottom-left corner of screen) and terminating at screenPosition.
+            // Calculate angle and slope based on screenPosition
             angle = Mathf.Atan2(screenPosition.y, screenPosition.x);
-            
-            // Slope of the line starting from zero and terminating at screenPosition.
             var slope = Mathf.Tan(angle);
 
-            // Two point's line's form is (y2 - y1) = m (x2 - x1) + c, 
-            // starting point (x1, y1) is screen botton-left (0, 0),
-            // ending point (x2, y2) is one of the screenBounds,
-            // m is the slope
-            // c is y intercept which will be 0, as line is passing through origin.
-            // Final equation will be y = mx.
-            if(screenPosition.x > 0)
+            // Adjust position to fit within screen bounds
+            if (screenPosition.x > 0)
             {
-                // Keep the x screen position to the maximum x bounds and
-                // find the y screen position using y = mx.
                 screenPosition = new Vector3(screenBounds.x, screenBounds.x * slope, 0);
             }
             else
             {
                 screenPosition = new Vector3(-screenBounds.x, -screenBounds.x * slope, 0);
             }
-            
-            // In case the y ScreenPosition exceeds the y screenBounds 
-            if(screenPosition.y > screenBounds.y)
+
+            if (screenPosition.y > screenBounds.y)
             {
-                // Keep the y screen position to the maximum y bounds and
-                // find the x screen position using x = y/m.
                 screenPosition = new Vector3(screenBounds.y / slope, screenBounds.y, 0);
             }
-            else if(screenPosition.y < -screenBounds.y)
+            else if (screenPosition.y < -screenBounds.y)
             {
                 screenPosition = new Vector3(-screenBounds.y / slope, -screenBounds.y, 0);
             }
-            
-            // Bring the ScreenPosition back to its original reference.
-            screenPosition += screenCentre;
+
+            screenPosition += screenCenter;
         }
     }
 }
