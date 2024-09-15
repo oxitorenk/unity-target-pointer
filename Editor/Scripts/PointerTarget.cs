@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Oxitorenk.TargetPointer
+namespace Oxitorenk.TargetPointer.Editor.Scripts
 {
     [DefaultExecutionOrder(0)]
     public class PointerTarget : MonoBehaviour

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Oxitorenk.TargetPointer
+namespace Oxitorenk.TargetPointer.Editor.Scripts
 {
     public class PointerItem : MonoBehaviour
     {

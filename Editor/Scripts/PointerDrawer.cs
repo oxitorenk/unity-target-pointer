@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Oxitorenk.TargetPointer
+namespace Oxitorenk.TargetPointer.Editor.Scripts
 {
-    [DefaultExecutionOrder(0)]
+    [DefaultExecutionOrder(-1)]
     public class PointerDrawer : MonoBehaviour
     {
         public static Action<PointerTarget, bool> TargetStateChanged;
@@ -45,23 +45,23 @@ namespace Oxitorenk.TargetPointer
             foreach (var target in _targets)
             {
                 var screenPosition = PointerHelper.GetScreenPosition(_mainCamera, target.transform.position);
-                bool isTargetVisible = PointerHelper.IsTargetVisible(screenPosition);
+                var isTargetVisible = PointerHelper.IsTargetVisible(screenPosition);
 
                 if (isTargetVisible && target.TryGetPointer(PointerItem.PointerType.OnScreen, out var pointerItem))
                 {
                     screenPosition.z = 0;
                     
-                    var pointer = target.CurrentPointer ?? GetPointer(pointerItem);
+                    var pointer = target.CurrentPointer != null && target.CurrentPointer.Type == PointerItem.PointerType.OnScreen ? target.CurrentPointer : GetPointer(pointerItem);
                     pointer.transform.position = screenPosition;
                     
                     target.AttachPointer(pointer);
                 }
-                else if (!isTargetVisible && target.TryGetPointer(PointerItem.PointerType.OffScreen, out pointerItem))
+                else if (isTargetVisible == false && target.TryGetPointer(PointerItem.PointerType.OffScreen, out pointerItem))
                 {
                     var angle = float.MinValue;
-                    PointerHelper.CalculatePointerPositionAndAngle(ref screenPosition, ref angle, _screenCenter, _screenBounds);
+                    PointerHelper.GetOnScreenIndicatorPositionAndAngle(ref screenPosition, ref angle, _screenCenter, _screenBounds);
 
-                    var pointer = target.CurrentPointer ?? GetPointer(pointerItem);
+                    var pointer = target.CurrentPointer != null && target.CurrentPointer.Type == PointerItem.PointerType.OffScreen ? target.CurrentPointer : GetPointer(pointerItem);
                     pointer.transform.rotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg);
                     pointer.transform.position = screenPosition;
                     
