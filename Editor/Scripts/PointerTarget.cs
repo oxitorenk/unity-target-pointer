@@ -7,7 +7,7 @@ namespace Oxitorenk.TargetPointer
     [DefaultExecutionOrder(0)]
     public class PointerTarget : MonoBehaviour
     {
-        [SerializeField] private List<PointerItem> indicators;
+        [SerializeField] private List<PointerItem> pointers;
 
         public PointerItem CurrentPointer { get; private set; }
         
@@ -21,20 +21,20 @@ namespace Oxitorenk.TargetPointer
             PointerDrawer.TargetStateChanged?.Invoke(this, false);
         }
         
-        public void AttachIndicator(PointerItem pointer)
+        public void AttachPointer(PointerItem pointer)
         {
             if (CurrentPointer == pointer) return;
             
-            // Hide the current indicator if it's exist
+            // Hide the current pointer if it's exist
             if (CurrentPointer != null)
                 CurrentPointer.gameObject.SetActive(false);
             
-            // Change current indicator and show it
+            // Change current pointer and show it
             CurrentPointer = pointer;
             CurrentPointer.gameObject.SetActive(true);
         }
         
-        public void RemoveIndicator()
+        public void RemovePointer()
         {
             if (CurrentPointer == null) return;
             
@@ -42,16 +42,17 @@ namespace Oxitorenk.TargetPointer
             CurrentPointer = null;
         }
         
-        public bool HasIndicatorType(PointerItem.IndicatorType indicatorType, out PointerItem pointer)
+        public bool HasPointerType(PointerItem.PointerType pointerType, out PointerItem pointer)
         {
-            if (indicators.Count(indicator => indicator.Type == indicatorType && indicator != null) == 0)
+            var availablePointers = pointers.FindAll(pointer => pointer.Type == pointerType && pointer != null);
+            if (availablePointers.Count == 0)
             {
                 pointer = null;
                 return false;
             }
-            
-            pointer = indicators.First(item => item.Type == indicatorType);
-            return pointer != null;
+
+            pointer = availablePointers.First();
+            return true;
         }
     }
 }

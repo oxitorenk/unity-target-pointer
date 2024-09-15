@@ -16,7 +16,7 @@ namespace Oxitorenk.TargetPointer
             return isTargetVisible;
         }
         
-        public static void GetOnScreenIndicatorPositionAndAngle(ref Vector3 screenPosition, ref float angle, Vector3 screenCentre, Vector3 screenBounds)
+        public static void GetOnScreenPointerPositionAndAngle(ref Vector3 screenPosition, ref float angle, Vector3 screenCentre, Vector3 screenBounds)
         {
             // Our screenPosition's origin is screen's bottom-left corner.
             // But we have to get the arrow's screenPosition and rotation with respect to screenCentre.
