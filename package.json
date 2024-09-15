@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "displayName": "Target Pointer",
   "description": "This project is a Unity plugin designed to offer easy-to-use and flexible target indicator features. When applied to a GameObject, the plugin will display its location continuously on the UI using an arrow. Similar to the quest markers in games like Skyrim, the target indicator ensures that the player's attention is consistently drawn to the specified object in the game world.",
+  "samples": [
+    {
+      "displayName": "Sample Project",
+      "description": "Contains example of usages of the plugin.",
+      "path": "Samples~/SampleProject"
+    }
+  ],
   "author": {
     "name": "Oxitorenk",
     "email": "akbulutoguzhan@outlook.com.tr",
