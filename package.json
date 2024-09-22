@@ -14,5 +14,9 @@
     "name": "Oxitorenk",
     "email": "akbulutoguzhan@outlook.com.tr",
     "url": "https://github.com/oxitorenk"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oxitorenk/unity-target-pointer.gits"
   }
 }
